@@ -1,0 +1,8 @@
+
+# adds the $1 param to the end of PATH variable
+addToPath() {
+    local re='[:\n]{1}'
+    if [ -z "$(echo "$PATH" | grep -P "${1}${re}")" ]; then
+        export PATH="${PATH}:${1}"
+    fi  
+}
