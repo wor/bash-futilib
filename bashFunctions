@@ -1,8 +1,26 @@
 
 # adds the $1 param to the end of PATH variable
-addToPath() {
+function addToPath {
     local re='[:\n]{1}'
     if [ -z "$(echo "$PATH" | grep -P "${1}${re}")" ]; then
         export PATH="${PATH}:${1}"
     fi  
+}
+
+
+function check_if_symlink_valid {
+    # if is symlink and not readable
+    if [[ -h "${1}" && ! -r "${1}" ]]; then 
+        return 0
+    else
+        return 1
+    fi
+}
+
+
+function remove_symlink_if_bad {
+    check_if_symlink_valid "${1}"
+    if [ "$?" -eq 0 ]; then
+        rm -iv "${1}"
+    fi 
 }
