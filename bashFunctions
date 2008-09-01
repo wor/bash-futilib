@@ -1,10 +1,14 @@
+# adds the $2 param to the end of $1 variable, but only if it isn't there yet
+function addToVar {
+    if [ -z "$(\grep -F "${2}" <(eval echo "\$$1"))" ]; then
+        export $1="$(eval echo "\$$1${2}")"
+    fi  
+}
+
 
 # adds the $1 param to the end of PATH variable
 function addToPath {
-    local re='[:\n]{1}'
-    if [ -z "$(echo "$PATH" | grep -P "${1}${re}")" ]; then
-        export PATH="${PATH}:${1}"
-    fi  
+    addToVar PATH ":$1" 
 }
 
 
