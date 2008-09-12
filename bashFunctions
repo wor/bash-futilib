@@ -23,10 +23,9 @@ function addToPath {
 # $2    old path in extended filename extension (extglob) syntax
 # for example replace any user bin directory with "/home/user/bin":
 # replaceAddInPath '/home/user/bin' '/home/+([[:alpha:]])/bin'
+# above example needs extglob shell option to be set
 function replaceAddInPath {
-    shopt -s extglob
     export PATH=${PATH/$2/$1}
-    shopt -u extglob
     # if didn't exist (no replacement done) add
     addToPath "$1"
 }
