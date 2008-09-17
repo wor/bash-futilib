@@ -47,3 +47,19 @@ function remove_symlink_if_bad {
         rm -iv "${1}"
     fi 
 }
+
+
+# TODO: make 3 param version that 3th param holds the variable where result is
+# stored
+# $1 name of the parameter that holds the file to be checked, resulting
+# absolut dir is stored to the same variable
+# $2 absolut base path, default current working dir
+function change_to_absolut_dir {
+    if [ "${!1:0:1}x" == "/x" ]; then 
+        # already absolut dir
+        return;
+    fi
+    local base_dir="${2}"
+    base_dir=${base_dir:-$(pwd)}
+    eval "${1}"="\${base_dir}/\${!1}"
+}
