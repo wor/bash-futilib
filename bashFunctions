@@ -12,7 +12,7 @@ function addToVarEnd {
 
 # adds the $1 param to the end of PATH variable
 function addToPath {
-    if [ -z "$(\grep -E ":${1}|${1}[:\n]" <(echo "$PATH"))" ]; then
+    if ! $(\grep -qE ":?${1}(:|$)" <(echo "${PATH}")); then
         addToVarEnd PATH ":$1" 
     fi  
 }
