@@ -63,3 +63,7 @@ function change_to_absolut_dir {
     base_dir=${base_dir:-$(pwd)}
     eval "${1}"="\${base_dir}/\${!1}"
 }
+
+function awhich {
+    (alias; declare -f) | /usr/bin/which --tty-only --read-alias --read-functions --show-tilde --show-dot $@
+}
