@@ -13,8 +13,8 @@ function addToVarEnd {
 # adds the $1 param to the end of PATH variable
 function addToPath {
     if ! $(\grep -qE ":?${1}(:|$)" <(echo "${PATH}")); then
-        addToVarEnd PATH ":$1" 
-    fi  
+        addToVarEnd PATH ":$1"
+    fi
 }
 
 
@@ -33,7 +33,7 @@ function replaceAddInPath {
 
 function check_if_symlink_valid {
     # if is symlink and not readable
-    if [[ -h "${1}" && ! -r "${1}" ]]; then 
+    if [[ -h "${1}" && ! -r "${1}" ]]; then
         return 0
     else
         return 1
@@ -45,7 +45,7 @@ function remove_symlink_if_bad {
     check_if_symlink_valid "${1}"
     if [ "$?" -eq 0 ]; then
         rm -iv "${1}"
-    fi 
+    fi
 }
 
 
@@ -55,14 +55,21 @@ function remove_symlink_if_bad {
 # absolut dir is stored to the same variable
 # $2 absolut base path, default current working dir
 function change_to_absolut_dir {
-    if [ "${!1:0:1}x" == "/x" ]; then 
+    shopt -s extglob
+    if [ "${!1:0:1}x" == "/x" ]; then
         # already absolut dir
         return;
     fi
-    local base_dir="${2}"
-    base_dir=${base_dir:-$(pwd)}
-    eval "${1}"="\${base_dir}/\${!1}"
+    local ___l_rmz="${2:-$(pwd)}/${!1}"
+    # clean ".." from ___l_rmz, requires extglob
+    while [ "${___l_rmz/\/..\/}" != "${___l_rmz}" ]; do
+        ___l_rmz=${___l_rmz//\/+([^\/])\/..\//\/};
+    done
+    # clean trailing "/dir/.."
+    ___l_rmz=${___l_rmz/%\/+([^\/])\/../}
+    eval "${1}"="\${___l_rmz}"
 }
+
 
 function awhich {
     (alias; declare -f) | /usr/bin/which --tty-only --read-alias --read-functions --show-tilde --show-dot $@
