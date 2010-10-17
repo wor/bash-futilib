@@ -18,7 +18,7 @@ function addToPath {
 }
 
 
-# replace in path or add replace pattern not found in path
+# replace in path or add if replace pattern not found in path
 # $1    new path
 # $2    old path in extended filename extension (extglob) syntax
 # for example replace any user bin directory with "/home/user/bin":
