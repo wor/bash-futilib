@@ -74,3 +74,13 @@ function change_to_absolut_dir {
 function awhich {
     (alias; declare -f) | /usr/bin/which --tty-only --read-alias --read-functions --show-tilde --show-dot $@
 }
+
+
+# $1: required program to be found with awhich.
+function requires {
+    awhich "${1}" &>/dev/null || \
+        {
+            echo "Error: \"${1}\" callable required (not found with awhich)." 1>&2
+            exit 1
+        }
+}
