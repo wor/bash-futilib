@@ -84,3 +84,45 @@ function requires {
             exit 1
         }
 }
+
+
+# $1: parameter name which other string parameters ar stored
+# $2..N: String parameters which are concatenated to ${!1}
+function Join {
+    local ___ft="${1}"
+    shift
+    eval "${___ft}"="\${!___ft}\${@}"
+}
+
+
+# simple msg function to use with color printing
+# $1: color code
+# $2..N: message to be printed
+function Cmsg() {
+    # 16 colors on black
+
+    # hilight colors on black
+    local WHITE_H="\033[1;37;40m"
+    local CYAN_H="\033[1;36;40m"
+    local PURPLE_H="\033[1;35;40m"
+    local BLUE_H="\033[1;34;40m"
+    local YELLOW_H="\033[1;33;40m"
+    local GREEN_H="\033[1;32;40m"
+    local RED_H="\033[1;31;40m"
+    local BLACK_H="\033[1;30;40m"
+
+    # colors on black
+    local WHITE="\033[37;40m"
+    local CYAN="\033[36;40m"
+    local PURPLE="\033[35;40m"
+    local BLUE="\033[34;40m"
+    local YELLOW="\033[33;40m"
+    local GREEN="\033[32;40m"
+    local RED="\033[31;40m"
+    local BLACK="\033[30;40m"
+
+    # clear colors
+    local CLR_COLOR="\033[1;0m"
+
+    printf "${!1}${@:2}${CLR_COLOR}\n"
+}
