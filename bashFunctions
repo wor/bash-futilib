@@ -10,12 +10,42 @@ function addToVarEnd {
 }
 
 
-# adds the $1 param to the end of PATH variable
-function addToPath {
-    if ! $(\grep -qE ":?${1}(:|$)" <(echo "${PATH}")); then
-        addToVarEnd PATH ":$1"
+# Check if PATH contains given data already.
+# $1: content which is checked against PATH variable.
+# $2: Alternative PATH like variable to work on, default is the "PATH"
+function check_if_already_in_path {
+    local _path_var="PATH"
+    [ -n "${2}" ] && _path_var="${2}"
+
+    if ! $(\grep -qE ":?${1}(:|$)" <(echo "${!_path_var}")); then
+        return 1 # was not
+    fi
+    return 0 # was
+}
+
+# adds the $1 param to the beginning of PATH variable
+# $1:
+# $2: Alternative PATH like variable to work on, default is the "PATH"
+function addToPathBeg {
+    if ! check_if_already_in_path ${1} ${2}; then
+        local _path_var="PATH"
+        [ -n "${2}" ] && _path_var="${2}"
+        addToVarBeg ${_path_var} "$1:"
     fi
 }
+
+
+# adds the $1 param to the end of PATH variable
+# $1:
+# $2: Alternative PATH like variable to work on, default is the "PATH"
+function addToPathEnd {
+    if ! check_if_already_in_path ${1} ${2}; then
+        local _path_var="PATH"
+        [ -n "${2}" ] && _path_var="${2}"
+        addToVarEnd ${_path_var} ":$1"
+    fi
+}
+alias addToPath='addToPathEnd'
 
 
 # replace in path or add if replace pattern not found in path
@@ -27,7 +57,7 @@ function addToPath {
 function replaceAddInPath {
     export PATH=${PATH/$2/$1}
     # if didn't exist (no replacement done) add
-    addToPath "$1"
+    addToPathEnd "$1"
 }
 
 
