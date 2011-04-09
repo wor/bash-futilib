@@ -48,6 +48,19 @@ function addToPathEnd {
 alias addToPath='addToPathEnd'
 
 
+#http://tldp.org/LDP/Bash-Beginners-Guide/html/sect_11_02.html
+# adds to path front or after to PATH, maybe better check how differs
+#pathmunge () {
+#    if ! echo $PATH | /bin/egrep -q "(^|:)$1($|:)" ; then
+#        if [ "$2" = "after" ] ; then
+#            PATH=$PATH:$1
+#        else
+#            PATH=$1:$PATH
+#        fi
+#    fi
+#}
+
+
 # replace in path or add if replace pattern not found in path
 # $1    new path
 # $2    old path in extended filename extension (extglob) syntax
