@@ -69,8 +69,9 @@ alias addToPath='addToPathEnd'
 # above example needs extglob shell option to be set
 function replaceAddInPath {
     export PATH=${PATH/$2/$1}
-    # if didn't exist (no replacement done) add
-    addToPathEnd "$1"
+    # if didn't exist (no replacement done) add, and only add if something was
+    # given
+    [[ "${1}" ]] && addToPathEnd "$1"
 }
 
 
