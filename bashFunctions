@@ -170,3 +170,39 @@ function Cmsg() {
 
     printf "${!1}${@:2}${CLR_COLOR}\n"
 }
+
+
+# Cmsg() wrapper which prints to stderr
+function Cemsg() {
+    Cmsg $@ 1>&2
+}
+
+
+# simple function to just echo every parameter to stderr
+# $1..N: These parameters are echoed to stderr.
+function Eecho() {
+    echo $@ 1>&2
+}
+
+
+# Gets current scripts path when given "${BASH_SOURCE[0]}" as parameter
+# $1: "${BASH_SOURCE[0]}"
+# $2: parameter name where script path is to be stored
+function Get_script_path() {
+    [[ "${1}" && "${2}" ]] || { Eecho "ERROR: Get_script_path needs two parameters."; return 1; }
+
+    # get script path
+    local script_path="${1}";
+
+    # unlink path
+    if [ -h "${script_path}" ]; then
+        while [ -h "${script_path}" ]; do script_path=`readlink "${script_path}"`; done
+    fi
+
+    pushd . > /dev/null
+    cd "$(dirname "${script_path}")" > /dev/null
+    script_path="$(pwd)";
+    popd  > /dev/null
+
+    eval "${2}"="\${script_path}"
+}
