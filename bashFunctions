@@ -206,3 +206,54 @@ function Get_script_path() {
 
     eval "${2}"="\${script_path}"
 }
+
+# Find files matching given regex (egrep style) from the given dir.
+#
+# Stores results to an array varible which name is given as a parameter.
+# If given array name is "-" print found files to stdout.
+#
+# Options:
+#   $1: -mp: match whole path not only basename
+#   $1: -maxd: max search depth (default 1)
+#   $1: -mind: min search depth (default 0)
+#
+# Positional:
+#   $1: search dir
+#   $2: regex
+#   $3: array name where find archive file names are to be stored
+Find_files() {
+    #local -a CMDLINE_OPTIONS=(\
+    #"-h|--help" \
+    #"Print this help info." \
+    #"{ display_help; exit; }" \
+
+    #"-o|--option" \
+    #"Example option." \
+    #"{ VARIABLE='yes'; shift; }" \
+    #)
+
+    # TODO: read opts with while loop
+
+    # TODO: implement min and max depth
+    local match_path="false"
+    [[ ${1} == "-mp" ]] && { match_path="true"; shift; }
+
+    [[ "${1}" ]] || { echo "Find_archives(): Error: Search dir must be given."; return 1; }
+    [[ "${2}" ]] || { echo "Find_archives(): Error: Regex must be given."; return 1; }
+    [[ "${3}" ]] || { echo "find_archives(): Error: Array name must be given."; return 1; }
+
+    local search_dir="${1}"
+    if [[ $match_path == "false" ]]; then
+        local regex="*./${2}"
+    else
+        local regex="${2}"
+    fi
+    local array_name="${3}"
+
+    if [[ $array_name == "-" ]]; then
+        find "${search_dir}" -maxdepth 1 -regextype posix-egrep -iregex "${regex}"
+    else
+        readarray -t "${array_name}" < \
+            <(find "${search_dir}" -maxdepth 1 -regextype posix-egrep -iregex "${regex}")
+    fi
+}
