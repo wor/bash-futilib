@@ -1,0 +1,76 @@
+. ~/.config/shell-de-env.conf
+
+# Starts new terminal with option to specify commands to be run before shell is
+# run.
+# $1: optional: "-b": background given command with "&"
+# $1: optional: "-ns": Run command without starting shell when it ends.
+# $1: dir to cd to before starting the shell
+# $2: optional: command to execute with the new term
+function Start_term {
+    local end=";"
+    local keep_alive_shell="true"
+    [[ "${1}" == "-b" ]] && { end="&"; shift; }
+    [[ "${1}" == "-ns" ]] && { keep_alive_shell="false"; shift; }
+
+    local term="urxvtc"
+    local shell="bash"
+    [[ "${1}" ]] && cd "${1}"
+    if [[ $keep_alive_shell == true ]]; then
+        [[ "${2}" ]] && term="${term} -e ${shell} -i -c \"${2} ${end} exec ${shell}\""
+    else
+        [[ "${2}" ]] && term="${term} -e ${shell} -i -c \"${2} ${end}\""
+    fi
+    eval ${term}
+    sleep "${_START_TERM_SLEEP_TIME}"
+}
+
+# Switch to specified tag in dwm window manager.
+# $1: tag number, not name; numbering starts from 0.
+function Switch_tag {
+    xsetroot -name "\$\$\$${1}"
+    sleep "${_DWM_SWITCH_TAG_SLEEP_TIME}" || exit 1
+}
+
+# Shows dzen window with given text
+# $1: window text content
+# $2: variable name to witch dzen pid is stored
+function Ongoing_notify {
+    # Get screen size information to position dzen window
+    local temp_list=($(xdpyinfo | grep dimensions))
+    local dimension=${temp_list[1]}
+    local screen_width=${dimension%%x*}
+    local screen_heigth=${dimension##*x}
+    local wpos=0
+    local hpos=0
+    # dzen window size
+    local heigth=100
+    local width=200
+
+    # Set dzen window position (screen center)
+    ((wpos=(screen_width-width)/2))
+    ((hpos=(screen_heigth-height)/2))
+
+    echo "${1}" | \
+        dzen2 -p 0 -w ${width} -h ${heigth} \
+        -x ${wpos} -y ${hpos} -bg darkgreen &
+    eval ${2}=$!
+}
+
+# Start ongoing notify window which can be killed with "End_ongoing_notify" if
+# called within same process (PID) as this.
+# $1: Ongoing notify message
+function Start_ongoing_notify {
+    local msg="${1}"; [[ "${msg}" ]] || msg="Running: $(basename ${0})"
+    local pid_var_name=dzen2_pid_$$
+
+    declare -g ${pid_var_name}
+    Ongoing_notify "${msg}" "${pid_var_name}"
+}
+
+# Kills ongoing notify window which was started with "Start_ongoing_notify" in
+# same process as this function is run.
+function Stop_ongoing_notify {
+    local pid_var_name=dzen2_pid_$$
+    [[ "${!pid_var_name}" ]] && kill ${!pid_var_name}
+    unset -v ${pid_var_name}
+}
