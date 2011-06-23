@@ -140,9 +140,11 @@ function Join {
 
 
 # simple msg function to use with color printing
+# $1: "-n" optional parameter indicating not to print a newline.
 # $1: color code
 # $2..N: message to be printed
 function Cmsg() {
+    [[ "${1}" == "-n" ]] && { local no_newline='yes'; shift; }
     # 16 colors on black
 
     # hilight colors on black
@@ -168,7 +170,8 @@ function Cmsg() {
     # clear colors
     local CLR_COLOR="\033[1;0m"
 
-    printf "${!1}${@:2}${CLR_COLOR}\n"
+    printf "${!1}${@:2}${CLR_COLOR}"
+    [[ "${no_newline}" == 'yes' ]] || printf "\n"
 }
 
 
