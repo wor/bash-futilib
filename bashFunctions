@@ -1,11 +1,13 @@
+# vim: ft=sh
+
 # adds the $2 param to the beginning of the $1 variable
-function addToVarBeg {
+addToVarBeg() {
     export $1="${2}${!1}"
 }
 
 
 # adds the $2 param to the end of the $1 variable
-function addToVarEnd {
+addToVarEnd() {
     export $1="${!1}${2}"
 }
 
@@ -13,7 +15,7 @@ function addToVarEnd {
 # Check if PATH contains given data already.
 # $1: content which is checked against PATH variable.
 # $2: Alternative PATH like variable to work on, default is the "PATH"
-function check_if_already_in_path {
+check_if_already_in_path() {
     local _path_var="PATH"
     [ -n "${2}" ] && _path_var="${2}"
 
@@ -26,7 +28,7 @@ function check_if_already_in_path {
 # adds the $1 param to the beginning of PATH variable
 # $1:
 # $2: Alternative PATH like variable to work on, default is the "PATH"
-function addToPathBeg {
+addToPathBeg() {
     if ! check_if_already_in_path ${1} ${2}; then
         local _path_var="PATH"
         [ -n "${2}" ] && _path_var="${2}"
@@ -38,7 +40,7 @@ function addToPathBeg {
 # adds the $1 param to the end of PATH variable
 # $1:
 # $2: Alternative PATH like variable to work on, default is the "PATH"
-function addToPathEnd {
+addToPathEnd() {
     if ! check_if_already_in_path ${1} ${2}; then
         local _path_var="PATH"
         [ -n "${2}" ] && _path_var="${2}"
@@ -67,7 +69,7 @@ alias addToPath='addToPathEnd'
 # for example replace any user bin directory with "/home/user/bin":
 # replaceAddInPath '/home/user/bin' '/home/+([[:alpha:]])/bin'
 # above example needs extglob shell option to be set
-function replaceAddInPath {
+replaceAddInPath() {
     export PATH=${PATH/$2/$1}
     # if didn't exist (no replacement done) add, and only add if something was
     # given
@@ -75,7 +77,7 @@ function replaceAddInPath {
 }
 
 
-function check_if_symlink_valid {
+check_if_symlink_valid() {
     # if is symlink and not readable
     if [[ -h "${1}" && ! -r "${1}" ]]; then
         return 0
@@ -85,7 +87,7 @@ function check_if_symlink_valid {
 }
 
 
-function remove_symlink_if_bad {
+remove_symlink_if_bad() {
     check_if_symlink_valid "${1}"
     if [ "$?" -eq 0 ]; then
         rm -iv "${1}"
@@ -98,7 +100,7 @@ function remove_symlink_if_bad {
 # $1 name of the parameter that holds the file to be checked, resulting
 # absolut dir is stored to the same variable
 # $2 absolut base path, default current working dir
-function change_to_absolut_dir {
+change_to_absolut_dir() {
     shopt -s extglob
     if [ "${!1:0:1}x" == "/x" ]; then
         # already absolut dir
@@ -115,13 +117,13 @@ function change_to_absolut_dir {
 }
 
 
-function awhich {
+awhich() {
     (alias; declare -f) | /usr/bin/which --tty-only --read-alias --read-functions --show-tilde --show-dot $@
 }
 
 
 # $1: required program to be found with awhich.
-function requires {
+requires() {
     awhich "${1}" &>/dev/null || \
         {
             echo "Error: \"${1}\" callable required (not found with awhich)." 1>&2
@@ -132,7 +134,7 @@ function requires {
 
 # $1: parameter name which other string parameters ar stored
 # $2..N: String parameters which are concatenated to ${!1}
-function Join {
+Join() {
     local ___ft="${1}"
     shift
     eval "${___ft}"="\${!___ft}\${@}"
@@ -143,7 +145,7 @@ function Join {
 # $1: "-n" optional parameter indicating not to print a newline.
 # $1: color code
 # $2..N: message to be printed
-function Cmsg() {
+Cmsg() {
     [[ "${1}" == "-n" ]] && { local no_newline='yes'; shift; }
     # 16 colors on black
 
@@ -176,14 +178,14 @@ function Cmsg() {
 
 
 # Cmsg() wrapper which prints to stderr
-function Cemsg() {
+Cemsg() {
     Cmsg $@ 1>&2
 }
 
 
 # simple function to just echo every parameter to stderr
 # $1..N: These parameters are echoed to stderr.
-function Eecho() {
+Eecho() {
     echo $@ 1>&2
 }
 
@@ -191,7 +193,7 @@ function Eecho() {
 # Gets current scripts path when given "${BASH_SOURCE[0]}" as parameter
 # $1: "${BASH_SOURCE[0]}"
 # $2: parameter name where script path is to be stored
-function Get_script_path() {
+Get_script_path() {
     [[ "${1}" && "${2}" ]] || { Eecho "ERROR: Get_script_path needs two parameters."; return 1; }
 
     # get script path
