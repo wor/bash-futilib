@@ -260,3 +260,8 @@ Find_files() {
             <(find "${search_dir}" -maxdepth 1 -regextype posix-egrep -iregex "${regex}")
     fi
 }
+
+# $1: file name to be sourced if it exists
+Source_if_exists() {
+    [[ -e ${1} ]] && source "${1}"
+}
