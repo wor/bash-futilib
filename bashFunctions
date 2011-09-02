@@ -335,17 +335,21 @@ Display_help() {
     done
     echo -e "${usage}"
 
-    echo
-    echo "Options: "
-    for ((i=0; i<${#CMDLINE_OPTIONS[@]}; i=i+3)); do
-        printf "%-20s %s\n" "${CMDLINE_OPTIONS[i]}" "${CMDLINE_OPTIONS[i+1]}"
-    done
+    if [[ ${#CMDLINE_OPTIONS[@]} > 0 ]]; then
+        echo
+        echo "Options: "
+        for ((i=0; i<${#CMDLINE_OPTIONS[@]}; i=i+3)); do
+            printf "%-20s %s\n" "${CMDLINE_OPTIONS[i]}" "${CMDLINE_OPTIONS[i+1]}"
+        done
+    fi
 
-    echo
-    echo "Arguments: "
-    for ((i=0; i<${#CMDLINE_ARGUMENTS[@]}; i=i+2)); do
-        printf "%-20s %s\n" "${CMDLINE_ARGUMENTS[i]}" "${CMDLINE_ARGUMENTS[i+1]}"
-    done
+    if [[ ${#CMDLINE_ARGUMENTS[@]} > 0 ]]; then
+        echo
+        echo "Arguments: "
+        for ((i=0; i<${#CMDLINE_ARGUMENTS[@]}; i=i+2)); do
+            printf "%-20s %s\n" "${CMDLINE_ARGUMENTS[i]}" "${CMDLINE_ARGUMENTS[i+1]}"
+        done
+    fi
 }
 
 # Parses command line options and arguments.
