@@ -269,3 +269,128 @@ Find_files() {
 Source_if_exists() {
     [[ -e ${1} ]] && source "${1}"
 }
+
+# $1: array variable name
+Print_array() {
+    # TODO: is there other way to access array by it's variable name?
+    eval temp_array=(\${${1}[@]\})
+    i=0
+    for v in "${temp_array[@]}"; do
+        echo "$i: $v"
+        ((++i))
+    done
+}
+
+### Structure of the CMDLINE_OPTIONS:
+# CMDLINE_OPTIONS is an array of strings where the number of strings is mod 3 (0,3,6,9...).
+#
+### Semantics of the CMDLINE_OPTIONS:
+# Every option consists of three strings in the array.
+# 1. String is the switch/case pattern
+# 2. String is help or description for the option.
+# 3. String is bash code to be evaluated when the option is parsed.
+#    At the moment it should contain "shift" statement to proceed to the next option.
+#
+### Example of CMDLINE_OPTIONS with three options:
+# local -a CMDLINE_OPTIONS=(\
+# "-h|--help" \
+# "Print this help info." \
+# "{ Display_help; exit; }" \
+#
+# "-o|--option" \
+# "Example option." \
+# "{ VARIABLE='yes'; shift; }" \
+#
+# "-v|--verbose" \
+# "Be more verbose." \
+# "{ ((VERBOSITY_LEVEL++)); shift; }" \
+# )
+#
+### Structure of the CMDLINE_ARGUMENTS:
+# CMDLINE_ARGUMENTS is an array of strings where the number of strings is mod 2 (0,2,4,6...).
+#
+### Semantics of the CMDLINE_ARGUMENTS:
+# Every option consists of two strings in the array.
+# 1. String is the argument name and same time the variable name for the argument.
+# 2. String is help or description for the option.
+#
+### Example of CMDLINE_ARGUMENTS with two arguments:
+# local -a CMDLINE_ARGUMENTS=(\
+#     'FILENAME_IN'
+#     'Filename to be read.'
+#
+#     'FILENAME_OUT'
+#     'Filename to be written.'
+# )
+
+# Displays help for command line program
+# Uses variables:
+#  array CMDLINE_ARGUMENTS
+#  array CMDLINE_OPTIONS
+Display_help() {
+    echo "Usage: "
+    local usage="\t$(basename ${0}) [options] "
+    for ((i=0; i<${#CMDLINE_ARGUMENTS[@]}; i=i+2)); do
+        usage="${usage}${CMDLINE_ARGUMENTS[i]} "
+    done
+    echo -e "${usage}"
+
+    echo
+    echo "Options: "
+    for ((i=0; i<${#CMDLINE_OPTIONS[@]}; i=i+3)); do
+        printf "%-20s %s\n" "${CMDLINE_OPTIONS[i]}" "${CMDLINE_OPTIONS[i+1]}"
+    done
+
+    echo
+    echo "Arguments: "
+    for ((i=0; i<${#CMDLINE_ARGUMENTS[@]}; i=i+2)); do
+        printf "%-20s %s\n" "${CMDLINE_ARGUMENTS[i]}" "${CMDLINE_ARGUMENTS[i+1]}"
+    done
+}
+
+# Parses command line options and arguments.
+# Uses variables:
+#  array CMDLINE_ARGUMENTS
+#  array CMDLINE_OPTIONS
+Process_cmdline() {
+    # Generate cmdline option reading loop and execute it
+    local run="
+    while [[ \$1 = -* ]]; do
+        case \"\$1\" in
+        "
+    for ((i=0; i<${#CMDLINE_OPTIONS[@]}; i=i+3)); do
+        run="${run}${CMDLINE_OPTIONS[i]})
+            ${CMDLINE_OPTIONS[i+2]}
+            ;;
+        "
+    done
+    run="${run}*)
+            echo \"Error: Unknown option: \$1\" >&2;
+            { display_help; return 1; }
+            ;;
+        esac
+    done
+    "
+    eval ${run}
+
+    # Generate argument checking
+    if [[ 0 < ${#CMDLINE_ARGUMENTS[@]} ]]; then
+        local run=''
+        for ((i=0; i<${#CMDLINE_ARGUMENTS[@]}; i=i+2)); do
+            run="${run}
+            [[ \"\$1\" ]] ||
+                { Eecho 'Error: No \"${CMDLINE_ARGUMENTS[i]}\" given.'; return 1; };
+                    ${CMDLINE_ARGUMENTS[i]}=\"\$1\"; shift;
+                    "
+        done
+        #echo "${run}"
+        eval ${run}
+    fi
+
+    if [[ "$@" ]]; then
+        Eecho "Error: Unkown argument(s) given: $@"
+        return 1
+    fi
+
+    return 0
+}
