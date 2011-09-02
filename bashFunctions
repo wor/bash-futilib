@@ -249,7 +249,9 @@ Find_files() {
 
     local search_dir="${1}"
     if [[ $match_path == "false" ]]; then
-        local regex="*./${2}"
+        # TODO: is there way with find to match just the basename not the whole path
+        #       because this is not a complete fix, for example '^' doesn't work in given regex
+        local regex=".*/${2}"
     else
         local regex="${2}"
     fi
