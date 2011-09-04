@@ -327,6 +327,7 @@ Print_array() {
 # Uses variables:
 #  array CMDLINE_ARGUMENTS
 #  array CMDLINE_OPTIONS
+#  PROGRAM_DESCRIPTION
 Display_help() {
     echo "Usage: "
     local usage="\t$(basename ${0}) [options] "
@@ -334,6 +335,8 @@ Display_help() {
         usage="${usage}${CMDLINE_ARGUMENTS[i]} "
     done
     echo -e "${usage}"
+
+    [[ "${PROGRAM_DESCRIPTION}" ]] && echo -e "\n${PROGRAM_DESCRIPTION}"
 
     if [[ ${#CMDLINE_OPTIONS[@]} > 0 ]]; then
         echo
