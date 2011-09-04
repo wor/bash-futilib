@@ -14,7 +14,7 @@ function Start_term {
 
     local term="urxvtc"
     local shell="bash"
-    [[ "${1}" ]] && cd "${1}"
+    [[ "${1}" ]] && { local cwd="${1}"; cd "${cwd/#~/${HOME}}"; }
     if [[ $keep_alive_shell == true ]]; then
         [[ "${2}" ]] && term="${term} -e ${shell} -i -c \"${2} ${end} exec ${shell}\""
     else
