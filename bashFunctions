@@ -342,8 +342,18 @@ Print_array() {
 Display_help() {
     echo "Usage: "
     local usage="\t$(basename ${0}) [options] "
-    for ((i=0; i<${#CMDLINE_ARGUMENTS[@]}; i=i+2)); do
-        usage="${usage}${CMDLINE_ARGUMENTS[i]} "
+    for ((i=0; i<${#CMDLINE_ARGUMENTS[@]}; i=i+3)); do
+        usage="${usage}${CMDLINE_ARGUMENTS[i]}"
+        # Parse options string to usage
+        local options="${CMDLINE_ARGUMENTS[i+2]}"
+        if [[ "${options}" ]]; then
+            if [[ "${options}" =~ ^[0-9]+$ ]]; then
+                usage="${usage}{${options}}"
+            else
+                usage="${usage}${options}"
+            fi
+        fi
+        usage="${usage} "
     done
     echo -e "${usage}"
 
@@ -360,7 +370,7 @@ Display_help() {
     if [[ ${#CMDLINE_ARGUMENTS[@]} > 0 ]]; then
         echo
         echo "Arguments: "
-        for ((i=0; i<${#CMDLINE_ARGUMENTS[@]}; i=i+2)); do
+        for ((i=0; i<${#CMDLINE_ARGUMENTS[@]}; i=i+3)); do
             printf "%-20s %s\n" "${CMDLINE_ARGUMENTS[i]}" "${CMDLINE_ARGUMENTS[i+1]}"
         done
     fi
