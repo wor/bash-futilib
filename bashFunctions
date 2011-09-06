@@ -403,6 +403,19 @@ Process_cmdline() {
 
     # Generate argument checking
     if [[ 0 < ${#CMDLINE_ARGUMENTS[@]} ]]; then
+
+        # First check that multiple option strings don't contain "+" or "*"
+        # TODO: refactor as function named __check_arg_options()
+        local mul_count=0
+        for ((i=2; i<${#CMDLINE_ARGUMENTS[@]}; i=i+3)); do
+            local options="${CMDLINE_ARGUMENTS[i]}"
+            [[ ${options} =~ \+|\* ]] && ((mul_count++))
+        done
+        if ((mul_count>1)); then
+            Eecho "Process_cmdline: Error: Only one argument can be variable count."
+            return 1
+        fi
+
         local run=''
         for ((i=0; i<${#CMDLINE_ARGUMENTS[@]}; i=i+3)); do
 
@@ -412,15 +425,16 @@ Process_cmdline() {
                 if [[ ${options} =~ ^[0-9]+$ ]]; then
                     # Specific number of arguments
                     run="${run}
+                    local _op_count=${options};
                     [[ \"\$1\" ]] ||
                         { Eecho 'Process_cmdline: Error: No \"${CMDLINE_ARGUMENTS[i]}\" given.'; return 1; };
                     ${CMDLINE_ARGUMENTS[i]}=(\${${CMDLINE_ARGUMENTS[i]}[@]} \"\$1\"); shift;
-                    while ((options > 1)); do
+                    while ((_op_count > 1)); do
                         [[ \"\$1\" ]] ||
                             { Eecho 'Process_cmdline: Error: Not enough \"${CMDLINE_ARGUMENTS[i]}\" given.'; return 1; };
                         ${CMDLINE_ARGUMENTS[i]}=(\${${CMDLINE_ARGUMENTS[i]}[@]} \"\$1\"); shift;
-                        ((--options));
-                    done
+                        ((_op_count--));
+                    done;
                     "
                 elif [[ ${options} == '+' ]]; then
                     # 1 or more arguments
@@ -432,7 +446,7 @@ Process_cmdline() {
                     ${CMDLINE_ARGUMENTS[i]}=(\${${CMDLINE_ARGUMENTS[i]}[@]} \"\$1\"); shift;
                     while [[ \"\$1\" ]]; do
                         ${CMDLINE_ARGUMENTS[i]}=(\${${CMDLINE_ARGUMENTS[i]}[@]} \"\$1\"); shift;
-                    done
+                    done;
                     "
                     # <<< Eval content
                 elif [[ ${options} == '*' ]]; then
@@ -442,7 +456,7 @@ Process_cmdline() {
                     run="${run}
                     while [[ \"\$1\" ]]; do
                         ${CMDLINE_ARGUMENTS[i]}=(\${${CMDLINE_ARGUMENTS[i]}[@]} \"\$1\"); shift;
-                    done
+                    done;
                     "
                     # <<< Eval content
                 else
@@ -460,7 +474,7 @@ Process_cmdline() {
                 # <<< Eval content
             fi
         done
-        echo "${run}"
+        #echo "${run}"
         eval ${run}
     fi
 
