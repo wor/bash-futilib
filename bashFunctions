@@ -365,6 +365,7 @@ Display_help() {
     if [[ ${#CMDLINE_OPTIONS[@]} > 0 ]]; then
         echo
         echo "Options: "
+        printf "%-20s %s\n" "-h|--help" "Print this help info."
         for ((i=0; i<${#CMDLINE_OPTIONS[@]}; i=i+3)); do
             printf "%-20s %s\n" "${CMDLINE_OPTIONS[i]}" "${CMDLINE_OPTIONS[i+1]}"
         done
@@ -388,6 +389,9 @@ Process_cmdline() {
     local run="
     while [[ \$1 = -* ]]; do
         case \"\$1\" in
+            -h|--help)
+                { Display_help; exit; }
+        ;;
         "
     for ((i=0; i<${#CMDLINE_OPTIONS[@]}; i=i+3)); do
         run="${run}${CMDLINE_OPTIONS[i]})
@@ -406,6 +410,8 @@ Process_cmdline() {
 
     # Generate argument checking
     if [[ 0 < ${#CMDLINE_ARGUMENTS[@]} ]]; then
+
+        # TODO: Now '+|*' must be placed last, do away this restriction
 
         # First check that multiple option strings don't contain "+" or "*"
         # TODO: refactor as function named __check_arg_options()
