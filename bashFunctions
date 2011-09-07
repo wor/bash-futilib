@@ -272,8 +272,11 @@ Source_if_exists() {
 
 # $1: array variable name
 Print_array() {
-    # TODO: is there other way to access array by it's variable name?
-    eval temp_array=(\${${1}[@]\})
+    # NOTE: another way to preserve spaces and access array by it's name (ugly as hell)
+    #eval "for c in \"\${${1}[@]}\"; do temp_array+=(\"\${c}\"); done"
+    local -a temp_array
+    local temp="${1}[@]"
+    temp_array+=("${!temp}")
     i=0
     for v in "${temp_array[@]}"; do
         echo "$i: $v"
