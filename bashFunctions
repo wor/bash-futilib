@@ -95,6 +95,16 @@ remove_symlink_if_bad() {
 }
 
 
+# Checks if given path is absolute.
+# $1: path
+Is_path_absolute() {
+    if [[ "${!1:0:1}" == "/" ]]; then
+        return 0
+    fi
+    return 1
+}
+
+
 # TODO: make 3 param version that 3th param holds the variable where result is
 # stored
 # $1 name of the parameter that holds the file to be checked, resulting
@@ -102,10 +112,9 @@ remove_symlink_if_bad() {
 # $2 absolut base path, default current working dir
 change_to_absolut_dir() {
     shopt -s extglob
-    if [ "${!1:0:1}x" == "/x" ]; then
-        # already absolut dir
-        return;
-    fi
+    # Check if already absolute path
+    Is_path_absolute "${!1}" && return
+
     local ___l_rmz="${2:-$(pwd)}/${!1}"
     # clean ".." from ___l_rmz, requires extglob
     while [ "${___l_rmz/\/..\/}" != "${___l_rmz}" ]; do
@@ -406,6 +415,7 @@ Process_cmdline() {
         esac
     done
     "
+    #echo "${run}" # For debug
     eval ${run}
 
     # Generate argument checking
@@ -483,7 +493,7 @@ Process_cmdline() {
                 # <<< Eval content
             fi
         done
-        #echo "${run}"
+        #echo "${run}" # For debug
         eval ${run}
     fi
 
