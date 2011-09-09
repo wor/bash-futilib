@@ -293,6 +293,48 @@ Print_array() {
     done
 }
 
+# Generates next non existing filename with given prefix.
+#
+# The prefix is the first name, and if it exists the next ones are names
+# postfixed with ".<number>", where the number is from ordered range [0-19].
+#
+# The first parameter defines what happens when all the generated
+# filenames in the range exists:
+#
+# TODO: add option for creating the generated filename with mktemp, or similar.
+#       Question is how to use mktemp to generate sequential names.
+#
+# E: Produce error, and return nothing.
+# L: Keep returing the last generated name.
+# C: Cycle names always selecting name next to one, that has the most recent creation date.
+#
+# $1: Type # TODO, now "E" is the default
+# $2: Variable name containing the prefix for the filename.
+#     The result is stored to this variable if new filename generation succeeded.
+Next_free_fn() {
+    shopt -s extglob
+    local prefix="${!2}"
+    local max_count=3
+    local count=0
+
+    [[ -e ${prefix} ]] || return 0
+    prefix="${prefix}.${count}" # Prepare first name
+
+    while [[ -e ${prefix} && ${count} < ${max_count} ]]; do
+        ((++count))
+        prefix="${prefix/%.+([0-9])/}" # Remove added postfix
+        prefix="${prefix}.${count}"    # and add a new one
+    done
+
+    if ((count >= ${max_count} )); then
+        echo "Error: Last name of the filename range existed: ${prefix}."
+        return 1
+    fi
+
+    eval ${2}=\""${prefix}"\"
+    return 0
+}
+
 ### Structure of the CMDLINE_OPTIONS:
 # CMDLINE_OPTIONS is an array of strings where the number of strings is mod 3 (0,3,6,9...).
 #
