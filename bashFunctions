@@ -440,9 +440,9 @@ Process_cmdline() {
     local run="
     while [[ \$1 = -* ]]; do
         case \"\$1\" in
-            -h|--help)
-                { Display_help; exit; }
-        ;;
+        -h|--help)
+            { Display_help; exit; }
+            ;;
         "
     for ((i=0; i<${#CMDLINE_OPTIONS[@]}; i=i+3)); do
         run="${run}${CMDLINE_OPTIONS[i]})
