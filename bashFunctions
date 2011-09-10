@@ -450,7 +450,7 @@ Process_cmdline() {
             ;;
         "
     done
-    run="${run}*)
+    run="${run}\*)
             echo \"Error: Unknown option: \$1\" >&2;
             { display_help; return 1; }
             ;;
