@@ -525,6 +525,15 @@ Process_cmdline() {
                     done;
                     "
                     # <<< Eval content
+                elif [[ ${options} == '?' ]]; then
+                    # 0 or 1 argument
+                    # Eval content >>>
+                    run="${run}
+                    if [[ \"\$1\" ]]; then
+                        ${CMDLINE_ARGUMENTS[i]}=\"\${1}\"; shift;
+                    fi;
+                    "
+                    # <<< Eval content
                 else
                     Eecho "Process_cmdline: Warning: unknown option string '${options}'."
                     return 1
