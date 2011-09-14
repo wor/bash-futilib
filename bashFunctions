@@ -335,6 +335,11 @@ Next_free_fn() {
     return 0
 }
 
+Petc() {
+    echo "Press enter to continue.."
+    read
+}
+
 ### Structure of the CMDLINE_OPTIONS:
 # CMDLINE_OPTIONS is an array of strings where the number of strings is mod 3 (0,3,6,9...).
 #
