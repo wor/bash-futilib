@@ -454,6 +454,7 @@ Display_help() {
 
     [[ "${PROGRAM_DESCRIPTION}" ]] && echo -e "\n${PROGRAM_DESCRIPTION}"
 
+    # TODO: add automatic default parameter printing
     if [[ ${#CMDLINE_OPTIONS[@]} > 0 ]]; then
         echo
         echo "Options: "
