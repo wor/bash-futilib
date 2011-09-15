@@ -283,15 +283,51 @@ Source_if_exists() {
 Print_array() {
     # NOTE: another way to preserve spaces and access array by it's name (ugly as hell)
     #eval "for c in \"\${${1}[@]}\"; do temp_array+=(\"\${c}\"); done"
+
+    # To get array variables indirectly: local vars="${1}[@]"; echo ${!vars}
+    # How to get arrays keys indirectly without using eval
+
+    local variables_i="${1}[\${i}]"
+    eval 'local -a keys=(${!'${1}'[@]})' # how to do this without eval
+
+    for i in "${keys[@]}"; do
+        echo "$i: ${!variables_i}"
+    done
+}
+
+# $1: array variable name
+Sort_array() {
     local -a temp_array
     local temp="${1}[@]"
     temp_array+=("${!temp}")
-    i=0
-    for v in "${temp_array[@]}"; do
-        echo "$i: $v"
-        ((++i))
-    done
+    readarray -t "${1}" < \
+        <(
+            for v in "${temp_array[@]}"; do
+                echo "${v}"
+            done | sort
+        )
 }
+
+#Is_array() {
+#    local var="${1}"
+#
+#    local pattern="^declare"
+#
+#    type=$(declare -p "${var}" 2>/dev/null)
+#    if [[ ${type} =~ ${pattern}" -a" ]]; then
+#        echo 1
+#    fi
+#}
+
+# Clean this
+#Array_copy() {
+#    local source_a=$1; shift
+#    local dest_a=$1; shift
+#
+#    #if [[ -n $(is_array $source) && -n $dest ]]; then
+#    eval "$dest=(\"\${$var""[@]}\")"
+#    #fi
+#}
 
 # Generates next non existing filename with given prefix.
 #
