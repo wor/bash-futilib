@@ -1,4 +1,10 @@
 # vim: ft=sh
+#
+# TODO: REFACTOR: "printf -v var" can be in some cases used to replace eval
+# TODO: read:
+#    http://fvue.nl/wiki/Bash:_passing_variables_by_reference
+#    http://www.mail-archive.com/bug-bash@gnu.org/msg07352.html
+#
 
 # adds the $2 param to the beginning of the $1 variable
 addToVarBeg() {
@@ -288,7 +294,7 @@ Print_array() {
     # How to get arrays keys indirectly without using eval
 
     local variables_i="${1}[\${i}]"
-    eval 'local -a keys=(${!'${1}'[@]})' # how to do this without eval
+    eval 'local -a keys=(${!'${1}'[@]})' # XXX: How to do this without eval
 
     for i in "${keys[@]}"; do
         echo "$i: ${!variables_i}"
@@ -307,6 +313,16 @@ Sort_array() {
             done | sort
         )
 }
+
+# $1: array name
+# $2: value to be appended to the array
+Append_array() {
+    local array_name="${1}"; shift
+    local value_to_be_appended="${1}"; shift
+
+    eval "${array_name}[\${#${array_name}[@]}]=\"${value_to_be_appended}\""
+}
+
 
 #Is_array() {
 #    local var="${1}"
@@ -374,6 +390,33 @@ Next_free_fn() {
 Petc() {
     echo "Press enter to continue.."
     read
+}
+
+# Returns total size of files/dirs in given array in bytes
+# $1: array of file/dir names
+# $2: variable where sum of given file/dir sizes is to be stored
+Total_size() {
+    local paths_n="${1}"; shift
+    local total_size_n="${1}"; shift
+
+    local paths="${paths_n}[\${path}]"
+    eval 'local -a keys=(${!'${paths_n}'[@]})' # XXX: How to do this without eval
+
+    local __bf__sum=0
+    for path in "${keys[@]}"; do
+        if [[ -d "${!paths}" ]]; then
+            local temp_dir_size="$(du -b f)"
+            temp_dir_size="${temp_dir_size%% *}"
+            ((__bf__sum=__bf__sum+temp_dir_size))
+        elif [[ -e "${!paths}" ]]; then
+            local temp_file_size="$(stat -c%s "${!paths}")"
+            ((__bf__sum=__bf__sum+temp_file_size))
+        fi
+    done
+
+    # NOTE: printf is safer than eval, total_size_n can be anything..
+    #eval "${total_size_n}=${__bf__sum}"
+    printf -v "${total_size_n}" "%s" "${__bf__sum}"
 }
 
 ### Structure of the CMDLINE_OPTIONS:
