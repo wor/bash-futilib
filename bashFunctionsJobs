@@ -1,3 +1,5 @@
+# vim: ft=sh
+. ~/bin/bashFunctions
 . ~/.config/shell-de-env.conf
 
 # Starts new terminal with option to specify commands to be run before shell is
@@ -6,7 +8,7 @@
 # $1: optional: "-ns": Run command without starting shell when it ends.
 # $1: dir to cd to before starting the shell
 # $2: optional: command to execute with the new term
-function Start_term {
+Start_term() {
     local end=";"
     local keep_alive_shell="true"
     [[ "${1}" == "-b" ]] && { end="&"; shift; }
@@ -25,16 +27,19 @@ function Start_term {
 }
 
 # Switch to specified tag in dwm window manager.
-# $1: tag number, not name; numbering starts from 0.
-function Switch_tag {
-    xsetroot -name "\$\$\$${1}"
+# $1: tag number, not name; numbering starts from 0. If not given uses current desktop tag.
+Switch_tag() {
+    local __BFJ__tag_to_switch="${1}"
+    [[ "${__BFJ__tag_to_switch}" ]] || { requires Get_current_desktop_tag && Get_current_desktop_tag __BFJ__tag_to_switch; }
+
+    xsetroot -name "\$\$\$${__BFJ__tag_to_switch}"
     sleep "${_DWM_SWITCH_TAG_SLEEP_TIME}" || exit 1
 }
 
 # Shows dzen window with given text
 # $1: window text content
 # $2: variable name to witch dzen pid is stored
-function Ongoing_notify {
+Ongoing_notify() {
     # Get screen size information to position dzen window
     local temp_list=($(xdpyinfo | grep dimensions))
     local dimension=${temp_list[1]}
@@ -59,7 +64,7 @@ function Ongoing_notify {
 # Start ongoing notify window which can be killed with "End_ongoing_notify" if
 # called within same process (PID) as this.
 # $1: Ongoing notify message
-function Start_ongoing_notify {
+Start_ongoing_notify() {
     local msg="${1}"; [[ "${msg}" ]] || msg="Running: $(basename ${0})"
     local pid_var_name=dzen2_pid_$$
 
@@ -69,7 +74,7 @@ function Start_ongoing_notify {
 
 # Kills ongoing notify window which was started with "Start_ongoing_notify" in
 # same process as this function is run.
-function Stop_ongoing_notify {
+Stop_ongoing_notify() {
     local pid_var_name=dzen2_pid_$$
     [[ "${!pid_var_name}" ]] && kill ${!pid_var_name}
     unset -v ${pid_var_name}

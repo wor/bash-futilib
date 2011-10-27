@@ -419,6 +419,16 @@ Total_size() {
     printf -v "${total_size_n}" "%s" "${__bf__sum}"
 }
 
+# Returns tag (number) for current desktop
+# $1: Variable name where current desktop tag is to be stored.
+Get_current_desktop_tag() {
+    local __BF__vn_current_tag="${1}"
+    requires xdotool
+    requires python
+    local __BF__current_desktop="$(xdotool get_desktop)"
+    printf -v "${__BF__vn_current_tag}" "%i" "$(python -c "import math; print(math.floor(math.log(${__BF__current_desktop},2)))")"
+}
+
 ### Structure of the CMDLINE_OPTIONS:
 # CMDLINE_OPTIONS is an array of strings where the number of strings is mod 3 (0,3,6,9...).
 #
