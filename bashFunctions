@@ -102,7 +102,7 @@ remove_symlink_if_bad() {
 
 
 # Checks if given path is absolute.
-# $1: path
+# $1: Variable name containing the path
 Is_path_absolute() {
     if [[ "${!1:0:1}" == "/" ]]; then
         return 0
@@ -119,16 +119,21 @@ Is_path_absolute() {
 change_to_absolut_dir() {
     shopt -s extglob
     # Check if already absolute path
-    Is_path_absolute "${!1}" && return
+    Is_path_absolute "${1}" && return
 
     local ___l_rmz="${2:-$(pwd)}/${!1}"
     # clean ".." from ___l_rmz, requires extglob
     while [ "${___l_rmz/\/..\/}" != "${___l_rmz}" ]; do
         ___l_rmz=${___l_rmz//\/+([^\/])\/..\//\/};
     done
+
     # clean trailing "/dir/.."
     ___l_rmz=${___l_rmz/%\/+([^\/])\/../}
-    eval "${1}"="\${___l_rmz}"
+
+    # Clean trailing ".", happens if given path is "." for example
+    ___l_rmz=${___l_rmz/%\/.//}
+
+    printf -v "${1}" "%s" "${___l_rmz}"
 }
 
 
@@ -146,6 +151,14 @@ requires() {
         }
 }
 
+# $1: Variable name which is required to have value set.
+Requires_var() {
+    [[ -v "${1}" ]] || \
+        {
+            echo "Error: Variable \"${1}\" is needed." 1>$2
+            exit 1
+        }
+}
 
 # $1: parameter name which other string parameters ar stored
 # $2..N: String parameters which are concatenated to ${!1}
@@ -533,7 +546,7 @@ Display_help() {
 Process_cmdline() {
     # Generate cmdline option reading loop and execute it
     local run="
-    while [[ \$1 = -* ]]; do
+    while [[ \$1 = -?* ]]; do
         case \"\$1\" in
         -h|--help)
             { Display_help; exit; }
