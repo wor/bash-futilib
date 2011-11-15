@@ -38,7 +38,12 @@ addToPathBeg() {
     if ! check_if_already_in_path ${1} ${2}; then
         local _path_var="PATH"
         [ -n "${2}" ] && _path_var="${2}"
-        addToVarBeg ${_path_var} "$1:"
+        if [[ "${!_path_var}" ]]; then
+            addToVarBeg "${_path_var}" "${1}:"
+        else
+            # In case if path variable is empty
+            printf -v "${_path_var}" "%s" "${1}"
+        fi
     fi
 }
 
@@ -50,7 +55,12 @@ addToPathEnd() {
     if ! check_if_already_in_path ${1} ${2}; then
         local _path_var="PATH"
         [ -n "${2}" ] && _path_var="${2}"
-        addToVarEnd ${_path_var} ":$1"
+        if [[ "${!_path_var}" ]]; then
+            addToVarEnd "${_path_var}" ":${1}"
+        else
+            # In case if path variable is empty
+            printf -v "${_path_var}" "%s" "${1}"
+        fi
     fi
 }
 alias addToPath='addToPathEnd'
