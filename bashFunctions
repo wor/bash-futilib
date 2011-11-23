@@ -607,7 +607,7 @@ Process_cmdline() {
                     local _op_count=${options};
                     [[ \"\$1\" ]] ||
                         { Eecho 'Process_cmdline: Error: No \"${CMDLINE_ARGUMENTS[i]}\" given.'; return 1; };
-                    ${CMDLINE_ARGUMENTS[i]}+=(\"\${1}\"); shift;
+                    ${CMDLINE_ARGUMENTS[i]}=(\"\${1}\"); shift;
                     while ((_op_count > 1)); do
                         [[ \"\$1\" ]] ||
                             { Eecho 'Process_cmdline: Error: Not enough \"${CMDLINE_ARGUMENTS[i]}\" given.'; return 1; };
@@ -622,7 +622,7 @@ Process_cmdline() {
                     run="${run}
                     [[ \"\$1\" ]] ||
                         { Eecho 'Process_cmdline: Error: No \"${CMDLINE_ARGUMENTS[i]}\" given.'; return 1; };
-                    ${CMDLINE_ARGUMENTS[i]}+=(\"\${1}\"); shift;
+                    ${CMDLINE_ARGUMENTS[i]}=(\"\${1}\"); shift;
                     while [[ \"\$1\" ]]; do
                         ${CMDLINE_ARGUMENTS[i]}+=(\"\${1}\"); shift;
                     done;
@@ -631,8 +631,12 @@ Process_cmdline() {
                 elif [[ ${options} == '*' ]]; then
                     # 0 or more arguments
                     # XXX: For now just read arguments greedily
+                    # Ovewrite orginal content of the array
                     # Eval content >>>
                     run="${run}
+                    if [[ \"\$1\" ]]; then
+                        ${CMDLINE_ARGUMENTS[i]}=(\"\${1}\"); shift;
+                    fi;
                     while [[ \"\$1\" ]]; do
                         ${CMDLINE_ARGUMENTS[i]}+=(\"\${1}\"); shift;
                     done;
