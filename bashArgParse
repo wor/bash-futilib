@@ -1,0 +1,301 @@
+#!/bin/bash
+#
+# Bash script library for command line argument and option parsing.
+
+. ~/bin/bashFunctions
+
+### Structure of the CMDLINE_OPTIONS:
+# CMDLINE_OPTIONS is an array of strings where the number of strings is mod 3 (0,3,6,9...).
+
+### Semantics of the CMDLINE_OPTIONS:
+# Every option consists of three strings in the array.
+# 1. String is the switch/case pattern
+# 2. String is help or description for the option.
+# 3. Option string or a string that starts with '{'
+#    - Case 1. Option string:
+#       String with two or three parts separated with '|' character.
+#       First part is variable name to which option content is to be stored.
+#       Second part is numeral interpreted as count how many compulsory variables the option has.
+#       Third is value which the variable defined in first part is set when this option is given.
+#    - Case 2. '{' bash code string.
+#       Bash code to be evaluated when the option is parsed.
+#       At the moment it should contain "shift" statement to proceed to the next option.
+
+### Example of CMDLINE_OPTIONS with three options:
+# local -a CMDLINE_OPTIONS=(\
+# "-o|--option" \
+# "Example of old style option with bash code string." \
+# "{ VARIABLE='yes'; shift; }" \
+
+# "-o2|--option2" \
+# "Example flag option, if "-o2" is given then OPTION2='True'." \
+# "OPTION2|0|True" \
+#
+# "-o3|--option3" \
+# "Example otpion with 2 compulsory arguments: argumenst are stored to array named 'OPTION3'." \
+# "OPTION3|2" \
+#
+# "-v|--verbose" \
+# "Be more verbose." \
+# "{ ((VERBOSITY_LEVEL++)); shift; }" \
+#
+# "-q|--quiet" \
+# "Be less verbose." \
+# "{ ((VERBOSITY_LEVEL--)); shift; }" \
+# )
+#
+### Structure of the CMDLINE_ARGUMENTS:
+# CMDLINE_ARGUMENTS is an array of strings where the number of strings is mod 3 (0,3,6,9..).
+
+### Semantics of the CMDLINE_ARGUMENTS:
+# Every option consists of three strings in the array.
+# 1. String is the argument name and same time the variable name for the argument.
+# 2. String is help or description for the option.
+# 3. String is the option string, defined below.
+
+### Option string:
+# Heres definition of possible "options" content as regex.
+# [0-9]+    : Number indicating count of arguments needed.
+# \*        : Zero or more arguments needed.
+# \+        : One or more arguments needed.
+#
+# Default option string is "1", meaning one argument needed.
+
+### Example of CMDLINE_ARGUMENTS with two arguments:
+# local -a CMDLINE_ARGUMENTS=(\
+#     'FILENAME_IN'
+#     'Filename to be read.'
+#     '1'
+#
+#     'FILENAME_OUT'
+#     'Filename to be written.'
+#     ''    # same as 1, as 1 is the default.
+# )
+
+
+# Displays help for command line program
+# Uses variables:
+#  array CMDLINE_ARGUMENTS
+#  array CMDLINE_OPTIONS
+#  PROGRAM_DESCRIPTION
+Display_help() {
+    echo "Usage: "
+    local usage="\t$(basename ${0}) [options] "
+    local i
+    for ((i=0; i<${#CMDLINE_ARGUMENTS[@]}; i=i+3)); do
+        usage="${usage}${CMDLINE_ARGUMENTS[i]}"
+        # Parse options string to usage
+        local options="${CMDLINE_ARGUMENTS[i+2]}"
+        if [[ "${options}" ]]; then
+            if [[ "${options}" =~ ^[0-9]+$ ]]; then
+                usage="${usage}{${options}}"
+            else
+                usage="${usage}${options}"
+            fi
+        fi
+        usage="${usage} "
+    done
+    echo -e "${usage}"
+
+    [[ "${PROGRAM_DESCRIPTION}" ]] && echo -e "\n${PROGRAM_DESCRIPTION}"
+
+    # TODO: add automatic default parameter printing
+    if [[ ${#CMDLINE_OPTIONS[@]} > 0 ]]; then
+        echo
+        echo "Options: "
+        printf "%-30s %s\n" "-h|--help" "Print this help info."
+        for ((i=0; i<${#CMDLINE_OPTIONS[@]}; i=i+3)); do
+            local -a _AP_opt_params; IFS='|' read -ra _AP_opt_params <<< "${CMDLINE_OPTIONS[i+2]}"
+            local opt_help_str="${CMDLINE_OPTIONS[i]}"
+            if [[ ${_AP_opt_params[1]} -gt 0 ]]; then
+                local j
+                for ((j=0; j<${_AP_opt_params[1]}; j=j+1)); do
+                    opt_help_str="${opt_help_str} <ARG>"
+                done
+            fi
+            printf "%-30s %s\n" "${opt_help_str}" "${CMDLINE_OPTIONS[i+1]}"
+        done
+    fi
+
+    if [[ ${#CMDLINE_ARGUMENTS[@]} > 0 ]]; then
+        echo
+        echo "Arguments: "
+        for ((i=0; i<${#CMDLINE_ARGUMENTS[@]}; i=i+3)); do
+            printf "%-20s %s\n" "${CMDLINE_ARGUMENTS[i]}" "${CMDLINE_ARGUMENTS[i+1]}"
+        done
+    fi
+}
+
+# Parses command line options and arguments.
+# Uses variables:
+#  array CMDLINE_ARGUMENTS
+#  array CMDLINE_OPTIONS
+Process_cmdline() {
+    # Generate cmdline option reading loop and execute it
+    local run="
+    while [[ \$1 = -?* ]]; do
+        case \"\$1\" in
+        -h|--help)
+            { Display_help; exit; }
+            ;;
+        "
+    local i # We don't want to bleed variable "i" changes
+    for ((i=0; i<${#CMDLINE_OPTIONS[@]}; i=i+3)); do
+        run="${run}${CMDLINE_OPTIONS[i]})
+            "
+
+        if [[ ${CMDLINE_OPTIONS[i+2]:0:1} == '{' ]]; then
+            run="${run}${CMDLINE_OPTIONS[i+2]}
+                "
+        else
+            local -a _AP_opt_params
+            # Turn options option string to array for processing
+            IFS='|' read -ra _AP_opt_params <<< "${CMDLINE_OPTIONS[i+2]}"
+
+            # Parse switch options (we are expecting 3)
+            if [[ ${_AP_opt_params[1]} == 0 ]]; then
+                run="${run}{ ${_AP_opt_params[0]}='${_AP_opt_params[2]}'; shift; }
+                    "
+            else
+                # Parse option with compulsory arguments:
+                # _AP_opt_params[0] holds the array variable name where arguments are to be stored.
+
+                # Generate check that enough arguments given for the option
+                run="${run}{
+                "
+                run="${run}if [[ \${#@} -le ${_AP_opt_params[1]} ]]; then
+                    echo \"Process_cmdline: Error: Not enough arguments for option: ${CMDLINE_OPTIONS[i]}\" >&2;
+                    return 1;
+                fi;
+                "
+
+                run="${run}${_AP_opt_params[0]}=("
+                local j
+                for ((j=0; j<${_AP_opt_params[1]}; j=j+1)); do
+                    run="${run}\"\$$((j+2))\" "
+                done
+                run="${run}); shift; shift ${_AP_opt_params[1]};
+                }
+                "
+            fi
+        fi
+
+        run="${run};;
+            "
+    done
+
+    run="${run}\*)
+            echo \"Error: Unknown option: \$1\" >&2;
+            { Display_help; return 1; }
+            ;;
+        esac
+    done
+    "
+    #echo "---------------------- Options run to be evaled ---------------------"
+    #echo "${run}" # For debug
+    #echo "---------------------- ------------------------ ---------------------"
+    eval ${run}
+
+    #
+    # After option parsing parse arguments
+
+    # Generate argument checking
+    if [[ 0 < ${#CMDLINE_ARGUMENTS[@]} ]]; then
+
+        # TODO: Now '+|*' must be placed last, do away this restriction
+
+        # First check that multiple option strings don't contain "+" or "*"
+        # TODO: refactor as function named __check_arg_options()
+        local mul_count=0
+        for ((i=2; i<${#CMDLINE_ARGUMENTS[@]}; i=i+3)); do
+            local options="${CMDLINE_ARGUMENTS[i]}"
+            [[ ${options} =~ \+|\* ]] && ((mul_count++))
+        done
+        if ((mul_count>1)); then
+            Eecho "Process_cmdline: Error: Only one argument can be variable count."
+            return 1
+        fi
+
+        local run=''
+        for ((i=0; i<${#CMDLINE_ARGUMENTS[@]}; i=i+3)); do
+
+            # Option string parsing
+            local options="${CMDLINE_ARGUMENTS[i+2]}"
+            if [[ "${options}" && "${options}" != "1" ]]; then
+                if [[ ${options} =~ ^[0-9]+$ ]]; then
+                    # Specific number of arguments
+                    run="${run}
+                    local _op_count=${options};
+                    [[ \"\$1\" ]] ||
+                        { Eecho 'Process_cmdline: Error: No \"${CMDLINE_ARGUMENTS[i]}\" given.'; return 1; };
+                    ${CMDLINE_ARGUMENTS[i]}=(\"\${1}\"); shift;
+                    while ((_op_count > 1)); do
+                        [[ \"\$1\" ]] ||
+                            { Eecho 'Process_cmdline: Error: Not enough \"${CMDLINE_ARGUMENTS[i]}\" given.'; return 1; };
+                        ${CMDLINE_ARGUMENTS[i]}+=(\"\${1}\"); shift;
+                        ((_op_count--));
+                    done;
+                    "
+                elif [[ ${options} == '+' ]]; then
+                    # 1 or more arguments
+                    # XXX: For now just read arguments greedily
+                    # Eval content >>>
+                    run="${run}
+                    [[ \"\$1\" ]] ||
+                        { Eecho 'Process_cmdline: Error: No \"${CMDLINE_ARGUMENTS[i]}\" given.'; return 1; };
+                    ${CMDLINE_ARGUMENTS[i]}=(\"\${1}\"); shift;
+                    while [[ \"\$1\" ]]; do
+                        ${CMDLINE_ARGUMENTS[i]}+=(\"\${1}\"); shift;
+                    done;
+                    "
+                    # <<< Eval content
+                elif [[ ${options} == '*' ]]; then
+                    # 0 or more arguments
+                    # XXX: For now just read arguments greedily
+                    # Ovewrite orginal content of the array
+                    # Eval content >>>
+                    run="${run}
+                    if [[ \"\$1\" ]]; then
+                        ${CMDLINE_ARGUMENTS[i]}=(\"\${1}\"); shift;
+                    fi;
+                    while [[ \"\$1\" ]]; do
+                        ${CMDLINE_ARGUMENTS[i]}+=(\"\${1}\"); shift;
+                    done;
+                    "
+                    # <<< Eval content
+                elif [[ ${options} == '?' ]]; then
+                    # 0 or 1 argument
+                    # Eval content >>>
+                    run="${run}
+                    if [[ \"\$1\" ]]; then
+                        ${CMDLINE_ARGUMENTS[i]}=\"\${1}\"; shift;
+                    fi;
+                    "
+                    # <<< Eval content
+                else
+                    Eecho "Process_cmdline: Warning: unknown option string '${options}'."
+                    return 1
+                fi
+
+            else
+                # Eval content >>>
+                run="${run}
+                [[ \"\$1\" ]] ||
+                    { Eecho 'Process_cmdline: Error: No \"${CMDLINE_ARGUMENTS[i]}\" given.'; return 1; };
+                ${CMDLINE_ARGUMENTS[i]}=\"\$1\"; shift;
+                "
+                # <<< Eval content
+            fi
+        done
+        #echo "${run}" # For debug
+        eval ${run}
+    fi
+
+    if [[ "$@" ]]; then
+        Eecho "Process_cmdline: Error: Unkown argument(s) given: $@"
+        return 1
+    fi
+
+    return 0
+}
+
