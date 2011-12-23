@@ -316,6 +316,7 @@ Print_array() {
     # To get array variables indirectly: local vars="${1}[@]"; echo ${!vars}
     # How to get arrays keys indirectly without using eval
 
+    local i  # We use "i" varible and want to keep it changes only locally!
     local variables_i="${1}[\${i}]"
     eval 'local -a keys=(${!'${1}'[@]})' # XXX: How to do this without eval
 
