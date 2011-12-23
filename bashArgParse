@@ -13,7 +13,7 @@
 # 2. String is help or description for the option.
 # 3. Option string or a string that starts with '{'
 #    - Case 1. Option string:
-#       String with two or three parts separated with '|' character.
+#       String with two or three parts separated by '|' character.
 #       First part is variable name to which option content is to be stored.
 #       Second part is numeral interpreted as count how many compulsory variables the option has.
 #       Third is value which the variable defined in first part is set when this option is given.
@@ -26,13 +26,13 @@
 # "-o|--option" \
 # "Example of old style option with bash code string." \
 # "{ VARIABLE='yes'; shift; }" \
-
+#
 # "-o2|--option2" \
 # "Example flag option, if "-o2" is given then OPTION2='True'." \
 # "OPTION2|0|True" \
 #
 # "-o3|--option3" \
-# "Example otpion with 2 compulsory arguments: argumenst are stored to array named 'OPTION3'." \
+# "Example option with 2 compulsory arguments: arguments are stored to array named 'OPTION3'." \
 # "OPTION3|2" \
 #
 # "-v|--verbose" \
@@ -43,7 +43,7 @@
 # "Be less verbose." \
 # "{ ((VERBOSITY_LEVEL--)); shift; }" \
 # )
-#
+
 ### Structure of the CMDLINE_ARGUMENTS:
 # CMDLINE_ARGUMENTS is an array of strings where the number of strings is mod 3 (0,3,6,9..).
 
@@ -252,7 +252,7 @@ Process_cmdline() {
                 elif [[ ${options} == '*' ]]; then
                     # 0 or more arguments
                     # XXX: For now just read arguments greedily
-                    # Ovewrite orginal content of the array
+                    # Overwrite original content of the array
                     # Eval content >>>
                     run="${run}
                     if [[ \"\$1\" ]]; then
@@ -292,7 +292,7 @@ Process_cmdline() {
     fi
 
     if [[ "$@" ]]; then
-        Eecho "Process_cmdline: Error: Unkown argument(s) given: $@"
+        Eecho "Process_cmdline: Error: Unknown argument(s) given: $@"
         return 1
     fi
 
