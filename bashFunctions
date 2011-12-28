@@ -228,6 +228,15 @@ Eecho() {
 }
 
 
+# $1: verbosity level which is required for the message to printed
+# $2..N: message
+Vecho() {
+    if [[ ${VERBOSITY_LEVEL} -ge ${1} ]]; then
+        echo ${@}
+    fi
+}
+
+
 # Gets current scripts path when given "${BASH_SOURCE[0]}" as parameter
 # $1: "${BASH_SOURCE[0]}"
 # $2: parameter name where script path is to be stored
