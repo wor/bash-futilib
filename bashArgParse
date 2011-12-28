@@ -107,14 +107,22 @@ Display_help() {
         for ((i=0; i<${#CMDLINE_OPTIONS[@]}; i=i+3)); do
             local -a _AP_opt_params; IFS='|' read -ra _AP_opt_params <<< "${CMDLINE_OPTIONS[i+2]}"
             local opt_help_str="${CMDLINE_OPTIONS[i]}"
+
             if [[ ${_AP_opt_params[1]} -gt 0 ]]; then
                 local j
                 for ((j=0; j<${_AP_opt_params[1]}; j=j+1)); do
                     opt_help_str="${opt_help_str} <ARG>"
                 done
             fi
-            printf "%-${first_field_width}s %s\n" "${opt_help_str}" "${CMDLINE_OPTIONS[i+1]}"
-            # TODO: add automatic default parameter printing
+            printf "%-${first_field_width}s %s" "${opt_help_str}" "${CMDLINE_OPTIONS[i+1]}"
+
+            # Check if default value given for variable
+            # XXX: local variables can override lower level variables, is there a way to check if variable is local?
+            local test_variable_name="${_AP_opt_params[0]}"
+            if [[ "${!test_variable_name}" ]]; then
+                printf "%s" " (default: '${!test_variable_name}')"
+            fi
+            echo
         done
     fi
 
@@ -122,8 +130,13 @@ Display_help() {
         echo
         echo "Arguments: "
         for ((i=0; i<${#CMDLINE_ARGUMENTS[@]}; i=i+3)); do
-            printf "%-${first_field_width}s %s\n" "${CMDLINE_ARGUMENTS[i]}" "${CMDLINE_ARGUMENTS[i+1]}"
-            # TODO: add automatic default parameter printing
+            printf "%-${first_field_width}s %s" "${CMDLINE_ARGUMENTS[i]}" "${CMDLINE_ARGUMENTS[i+1]}"
+            # Default parameter printing
+            local test_variable_name="${CMDLINE_ARGUMENTS[i]}"
+            if [[ "${!test_variable_name}" ]]; then
+                printf "%s" " (default: '${!test_variable_name}')"
+            fi
+            echo
         done
     fi
 }
