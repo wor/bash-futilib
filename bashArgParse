@@ -99,11 +99,11 @@ Display_help() {
 
     [[ "${PROGRAM_DESCRIPTION}" ]] && echo -e "\n${PROGRAM_DESCRIPTION}"
 
-    # TODO: add automatic default parameter printing
+    local first_field_width=30
     if [[ ${#CMDLINE_OPTIONS[@]} > 0 ]]; then
         echo
         echo "Options: "
-        printf "%-30s %s\n" "-h|--help" "Print this help info."
+        printf "%-${first_field_width}s %s\n" "-h|--help" "Print this help info."
         for ((i=0; i<${#CMDLINE_OPTIONS[@]}; i=i+3)); do
             local -a _AP_opt_params; IFS='|' read -ra _AP_opt_params <<< "${CMDLINE_OPTIONS[i+2]}"
             local opt_help_str="${CMDLINE_OPTIONS[i]}"
@@ -113,7 +113,8 @@ Display_help() {
                     opt_help_str="${opt_help_str} <ARG>"
                 done
             fi
-            printf "%-30s %s\n" "${opt_help_str}" "${CMDLINE_OPTIONS[i+1]}"
+            printf "%-${first_field_width}s %s\n" "${opt_help_str}" "${CMDLINE_OPTIONS[i+1]}"
+            # TODO: add automatic default parameter printing
         done
     fi
 
@@ -121,7 +122,8 @@ Display_help() {
         echo
         echo "Arguments: "
         for ((i=0; i<${#CMDLINE_ARGUMENTS[@]}; i=i+3)); do
-            printf "%-20s %s\n" "${CMDLINE_ARGUMENTS[i]}" "${CMDLINE_ARGUMENTS[i+1]}"
+            printf "%-${first_field_width}s %s\n" "${CMDLINE_ARGUMENTS[i]}" "${CMDLINE_ARGUMENTS[i+1]}"
+            # TODO: add automatic default parameter printing
         done
     fi
 }
