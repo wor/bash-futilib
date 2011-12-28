@@ -2,6 +2,8 @@
 #
 # Bash script library for command line argument and option parsing.
 
+# TODO: For options and arguments option to define possible values then given value can be checked automatically.
+
 . ~/bin/bashFunctions
 
 ### Structure of the CMDLINE_OPTIONS:
