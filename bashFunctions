@@ -147,6 +147,16 @@ change_to_absolut_dir() {
 }
 
 
+# Returns paths parent path in same variable
+# $1: Variable name of a variable containing a path
+Get_parent_path() {
+    local __bf__path="${!1}"
+    __bf__path="${__bf__path%/}"
+    __bf__path="${__bf__path%/*}"
+    printf -v "${1}" "%s" "${__bf__path}"
+}
+
+
 awhich() {
     (alias; declare -f) | /usr/bin/which --tty-only --read-alias --read-functions --show-tilde --show-dot $@
 }
