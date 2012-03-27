@@ -16,9 +16,9 @@
 # 3. Option string or a string that starts with '{'
 #    - Case 1. Option string:
 #       String with two or three parts separated by '|' character.
-#       First part is variable name to which option content is to be stored.
-#       Second part is numeral interpreted as count how many compulsory variables the option has.
-#       Third is value which the variable defined in first part is set when this option is given.
+#       * First part is variable name to which option content is to be stored.
+#       * Second part is numeral interpreted as count how many compulsory variables the option has.
+#       * Third is value which the variable defined in first part is set when this option is given.
 #    - Case 2. '{' bash code string.
 #       Bash code to be evaluated when the option is parsed.
 #       At the moment it should contain "shift" statement to proceed to the next option.
