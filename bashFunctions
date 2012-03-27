@@ -574,6 +574,7 @@ Display_help() {
 #  array CMDLINE_ARGUMENTS
 #  array CMDLINE_OPTIONS
 Process_cmdline() {
+    echo "THIS IS DEPRECATED, use argparse!!!!"
     # Generate cmdline option reading loop and execute it
     local run="
     while [[ \$1 = -?* ]]; do
@@ -696,4 +697,19 @@ Process_cmdline() {
     fi
 
     return 0
+}
+
+# TODO: print shell color codes also
+# Also other \e[.. code stuff
+print_colors_256()
+{
+    ( x=`tput op` y=`printf %$((${COLUMNS}-6))s`;
+
+    for i in {0..256}; do
+
+        o=00$i;
+
+        echo -e ${o:${#o}-3:3} `tput setaf $i;tput setab $i`${y// /=}$x;
+
+    done )
 }
