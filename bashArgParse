@@ -150,7 +150,7 @@ Display_help() {
 Process_cmdline() {
     # Generate cmdline option reading loop and execute it
     local run="
-    while [[ \$1 = -?* ]]; do
+    while [[ \$1 =~ -.+ ]]; do
         case \"\$1\" in
         -h|--help)
             { Display_help; exit; }
@@ -201,7 +201,7 @@ Process_cmdline() {
             "
     done
 
-    run="${run}\*)
+    run="${run}-*)
             echo \"Error: Unknown option: \$1\" >&2;
             { Display_help; return 1; }
             ;;
@@ -211,7 +211,7 @@ Process_cmdline() {
     #echo "---------------------- Options run to be evaled ---------------------"
     #echo "${run}" # For debug
     #echo "---------------------- ------------------------ ---------------------"
-    eval ${run}
+    eval "${run}"
 
     #
     # After option parsing parse arguments
