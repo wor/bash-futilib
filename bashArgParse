@@ -150,7 +150,7 @@ Display_help() {
 Process_cmdline() {
     # Generate cmdline option reading loop and execute it
     local run="
-    while [[ \$1 =~ -.+ ]]; do
+    while [[ \$1 =~ ^-.+ ]]; do
         case \"\$1\" in
         -h|--help)
             { Display_help; exit; }
