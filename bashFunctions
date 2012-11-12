@@ -486,3 +486,22 @@ print_colors_256()
 
     done )
 }
+
+# $1: Dir name to get
+# $2: Variable name where to dir is to be set
+Get_XDG_dir() {
+    test -f ${XDG_CONFIG_HOME:-~/.config}/user-dirs.dirs && source ${XDG_CONFIG_HOME:-~/.config}/user-dirs.dirs
+    __bf__get_var_name="XDG_${1}_DIR"
+    printf -v "${2}" "%s" "${!__bf__get_var_name}"
+
+    # Check if dir name not found
+    if ! [[ "${!2}" ]]; then
+        # Desktop defaults
+        if [[ ${1} = "DESKTOP" ]]; then
+            printf -v "${2}" "%s" "$HOME/Desktop"
+        else
+            return 1
+        fi
+    fi
+    return 0
+}
