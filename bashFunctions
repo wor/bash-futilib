@@ -403,30 +403,39 @@ Append_array() {
 # L: Keep returing the last generated name.
 # C: Cycle names always selecting name next to one, that has the most recent creation date.
 #
-# $1: Type # TODO, now "E" is the default
+# $1: Error action: Action when max count is exceeded.
 # $2: Variable name containing the prefix for the filename.
 #     The result is stored to this variable if new filename generation succeeded.
+# $3: Max count of .* postfix file names produced. Prefix variable given is not modified if count is exceeded.
 Next_free_fn() {
     shopt -s extglob
+    local error_action="${1}"
+    [[ ${error_action} =~ ^(E|L|C)$ ]] || { Eecho "Error: Invalid error action given (E|L|C)."; return 1; }
     local prefix="${!2}"
-    local max_count=3
-    local count=0
+    local max_count=${3:-10000}
 
+    local count=0
     [[ -e ${prefix} ]] || return 0
+    org_prefix="${prefix}"
     prefix="${prefix}.${count}" # Prepare first name
 
-    while [[ -e ${prefix} && ${count} < ${max_count} ]]; do
+    while [[ -e ${prefix} && ((count} < max_count)) ]]; do
         ((++count))
-        prefix="${prefix/%.+([0-9])/}" # Remove added postfix
-        prefix="${prefix}.${count}"    # and add a new one
+        prefix="${org_prefix}.${count}"    # New prefix
     done
 
     if ((count >= ${max_count} )); then
-        echo "Error: Last name of the filename range existed: ${prefix}."
-        return 1
+        if [[ ${error_action} == "E" ]]; then
+            Eecho "Error: Last name of the filename range existed: ${prefix}."
+            return 1
+        elif [[ ${error_action} == "L" ]]; then
+            :
+        else
+            echo TODO cycling
+        fi
     fi
 
-    eval ${2}=\""${prefix}"\"
+    printf -v "${2}" "%s" "${prefix}"
     return 0
 }
 
