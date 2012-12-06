@@ -284,21 +284,15 @@ Get_script_path() {
 #   $2: regex
 #   $3: array name where find archive file names are to be stored
 Find_files() {
-    #local -a CMDLINE_OPTIONS=(\
-    #"-h|--help" \
-    #"Print this help info." \
-    #"{ display_help; exit; }" \
-
-    #"-o|--option" \
-    #"Example option." \
-    #"{ VARIABLE='yes'; shift; }" \
-    #)
-
-    # TODO: read opts with while loop
-
-    # TODO: implement min and max depth
     local match_path="false"
-    [[ ${1} == "-mp" ]] && { match_path="true"; shift; }
+    local max_depth=1
+    local min_depth=0
+    # Reading opts
+    while [[ ${1} =~ ^-m(axd|ind|p) && ${1} != "--" ]]; do
+        [[ ${1} == "-maxd" ]] && { max_depth="${2}"; shift 2; }
+        [[ ${1} == "-mind" ]] && { min_depth="${2}"; shift 2; }
+        [[ ${1} == "-mp" ]] && { match_path="true"; shift; }
+    done
 
     [[ "${1}" ]] || { echo "Find_archives(): Error: Search dir must be given."; return 1; }
     [[ "${2}" ]] || { echo "Find_archives(): Error: Regex must be given."; return 1; }
@@ -314,11 +308,16 @@ Find_files() {
     fi
     local array_name="${3}"
 
+    local __BF__find_args="-maxdepth ${max_depth} \
+        -mindepth ${min_depth} \
+        -regextype posix-egrep \
+        -iregex ${regex}"
     if [[ $array_name == "-" ]]; then
-        find "${search_dir}" -maxdepth 1 -regextype posix-egrep -iregex "${regex}"
+        find "${search_dir}" ${__BF__find_args}
     else
+        # TODO: use Exec_array_out
         readarray -t "${array_name}" < \
-            <(find "${search_dir}" -maxdepth 1 -regextype posix-egrep -iregex "${regex}")
+            <(find "${search_dir}" ${__BF__find_args})
     fi
 }
 
