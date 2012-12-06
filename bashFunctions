@@ -365,6 +365,80 @@ Append_array() {
     eval "${array_name}[\${#${array_name}[@]}]=\"${value_to_be_appended}\""
 }
 
+# Selects elements from given array and stores them to target array.
+# $1: Source array name
+# $2: Target array name
+# $3: extended-regex to match.
+# $4: If "!" inverts filter.
+Select_to_array() {
+    local __BF__array="${1}[@]"
+    local __BF__target_array="${2}"
+    local __BF__regex="${3}"
+    local __BF__i
+    readarray -t "${__BF__target_array}" < \
+        <(
+            for __BF__i in "${!__BF__array}"; do
+                if [[ "${3}" == "!" ]]; then
+                    ! [[ ${__BF__i} =~ ${__BF__regex} ]] && echo "${__BF__i}"
+                else
+                    [[ ${__BF__i} =~ ${__BF__regex} ]] && echo "${__BF__i}"
+                fi
+            done
+        )
+}
+
+# Removes (recreates) given array by removing variables which match given regex.
+# $1: array name
+# $2: extended-regex to match.
+# $3: If "!" inverts filter.
+Filter_array() {
+    local array="${1}[@]"
+    local regex="${2}"
+    local i
+    readarray -t "${1}" < \
+        <(
+            for i in "${!array}"; do
+                if [[ "${3}" == "!" ]]; then
+                    ! [[ ${i} =~ ${regex} ]] || echo "${i}"
+                else
+                    [[ ${i} =~ ${regex} ]] || echo "${i}"
+                fi
+            done
+        )
+}
+
+# Splits given array to two arrays according to given regex.
+# $1: extended-regex
+# $2: source array variable name
+# $3: if $1 regex matches target array variable name
+# $4: if $1 does not match target array variable name
+Split_array() {
+    local regex="${1}"
+    local source_array="${2}[@]"
+    local target_array1="${3}"
+    local target_array2="${4}"
+
+    local i
+    local i1=0
+    local i2=0
+    for i in "${!source_array}"; do
+        if [[ ${i} =~ ${regex} ]]; then
+            eval "${target_array1}[${i1}]=\"${i}\""
+            ((i1++))
+        else
+            eval "${target_array2}[${i2}]=\"${i}\""
+            ((i2++))
+        fi
+    done
+}
+
+# $1: Array variable name where output is stored.
+# $n: Command and it's arguments.
+Exec_array_out() {
+    out_array_name="${1}"; shift
+    readarray -t "${out_array_name}" < \
+        <("${@}")
+}
 
 #Is_array() {
 #    local var="${1}"
@@ -511,5 +585,39 @@ Get_XDG_dir() {
             return 1
         fi
     fi
+    return 0
+}
+
+# Calls vimdiff for given files pairing them with filenames with given extension removed.
+# $1: Array of files with $2 extension.
+# $2: Extension which is removed from $1 files to produces a file to diff against.
+# $3: Cleanup function which receives filename from $1 after vimdiff has been called successfully.
+Diff_edit() {
+    local __BF__files="${1}"
+    local __BF__extension="${2}"
+    local __BF__cleanup_func="${3}"
+
+    local i
+    local __BF__fn_i="${1}[\${i}]"
+    eval 'local -a keys=(${!'${1}'[@]})'
+
+    for i in "${keys[@]}"; do
+        local __BF__f="${!__BF__fn_i}"
+        if [[ -w ${__BF__f} && -w ${__BF__f%${__BF__extension}} ]]; then
+            if vimdiff "${__BF__f%${__BF__extension}}" "${__BF__f}"; then
+                if [[ "${__BF__cleanup_func}" ]]; then
+                    ${__BF__cleanup_func} "${__BF__f}" || {
+                        Eecho "Error: cleanup function ${__BF__cleanup_func} failed."
+                        return 1
+                    }
+                fi
+            else
+                Eecho "Error: vimdiff returned non-zero exit status -> stopping."
+                return 1
+            fi
+        else
+            Eecho "Warning: skipping '${__BF__f}' because of permission issues."
+        fi
+    done
     return 0
 }
