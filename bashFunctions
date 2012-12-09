@@ -520,6 +520,50 @@ Petc() {
     read
 }
 
+
+# Prompt yes/no question. Returns 0 if "yes" is answered or defaulted and 1 if "no" is answered or defaulted.
+# $1: Prompt text
+# $2: String either "default-yes" or "default-no", if not given then no default answer is set.
+Pyesno() {
+    local __BF__answer
+    local __BF__yn
+    local __BF__regex_yes
+    local __BF__regex_no
+    local __BF__must_match_regex
+    local __BF__default_yes
+
+    __BF__regex_yes='^([Yy]|[Yy][Ee][Ss])$'
+    __BF__regex_no='^([Nn]|[Nn][Oo])$'
+    __BF__must_match_regex='^([Yy]|[Nn]|[Yy][Ee][Ss]|[Nn][Oo]|[[:space:]]*)$'
+
+    if [[ "${2}" == "default-yes" ]]; then
+        __BF__default_yes="true"
+        __BF__yn="[Y/n]: "
+    elif [[ "${2}" == "default-no" ]]; then
+        __BF__default_yes="false"
+        __BF__yn="[y/N]: "
+    else
+        __BF__must_match_regex='^([Yy]|[Nn]|[Yy][Ee][Ss]|[Nn][Oo])$'
+        __BF__yn='[y/n]: '
+    fi
+    read -p "${1} ${__BF__yn}" __BF__answer
+    until [[ ${__BF__answer} =~ ${__BF__must_match_regex} ]]; do
+        Eecho "Please answer [y]es or [n]o."
+        read -p "${1} ${__BF__yn}" __BF__answer
+    done
+
+    if [[ ${__BF__answer} =~ ^[[:space:]]*$ ]]; then
+        [[ ${__BF__default_yes} == "true" ]]; return $?
+    fi
+
+    if [[ ${__BF__answer} =~ ${__BF__regex_yes} ]]; then
+        return 0
+    elif [[ ${__BF__answer} =~ ${__BF__regex_no} ]]; then
+        return 1
+    fi
+    return 42 # We should newer reach this point
+}
+
 # Returns total size of files/dirs in given array in bytes
 # $1: array of file/dir names
 # $2: variable where sum of given file/dir sizes is to be stored
