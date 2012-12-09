@@ -440,7 +440,7 @@ Split_array() {
 Exec_array_out() {
     out_array_name="${1}"; shift
     readarray -t "${out_array_name}" < \
-        <("${@}")
+        <(eval "${@}")
 }
 
 #Is_array() {
