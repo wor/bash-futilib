@@ -387,10 +387,11 @@ Select_to_array() {
         )
 }
 
-# Removes (recreates) given array by removing variables which match given regex.
+# Removes (recreates) given array by removing variables which match given regex or string.
 # $1: array name
-# $2: extended-regex to match.
-# $3: If "!" inverts filter.
+# $2: extended-regex to match or string.
+# $3: If "!" inverts filter and if "str" then the regex is interpreted to be a
+#     plain string, matching is then done with '=='.
 Filter_array() {
     local array="${1}[@]"
     local regex="${2}"
@@ -398,7 +399,9 @@ Filter_array() {
     readarray -t "${1}" < \
         <(
             for i in "${!array}"; do
-                if [[ "${3}" == "!" ]]; then
+                if [[ "${3}" == "str" ]]; then
+                    [[ ${i} == ${regex} ]] || echo "${i}"
+                elif [[ "${3}" == "!" ]]; then
                     ! [[ ${i} =~ ${regex} ]] || echo "${i}"
                 else
                     [[ ${i} =~ ${regex} ]] || echo "${i}"
