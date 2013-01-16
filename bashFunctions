@@ -358,6 +358,19 @@ Sort_array() {
         )
 }
 
+# $1: array variable name
+Uniq_array() {
+    local -a temp_array
+    local temp="${1}[@]"
+    temp_array+=("${!temp}")
+    readarray -t "${1}" < \
+        <(
+            for v in "${temp_array[@]}"; do
+                echo "${v}"
+            done | sort | uniq
+        )
+}
+
 # $1: array name
 # $2: value to be appended to the array
 Append_array() {
