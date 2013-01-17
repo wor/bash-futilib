@@ -315,11 +315,11 @@ Find_files() {
     # Ok, bash variable expansion is confusing, this might be done easily without eval or not.
     # The problem arises when shell globbing symbols are present in the given regex.
     if [[ $array_name == "-" ]]; then
-        eval find "${search_dir} ${__BF__find_args} -iregex '${regex}'"
+        eval find "\"${search_dir}\" ${__BF__find_args} -iregex '${regex}'"
     else
         # TODO: use Exec_array_out
         readarray -t "${array_name}" < \
-            <(eval find "${search_dir} ${__BF__find_args} -iregex '${regex}'")
+            <(eval find "\"${search_dir}\" ${__BF__find_args} -iregex '${regex}'")
     fi
 }
 
