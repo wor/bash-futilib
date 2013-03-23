@@ -738,3 +738,12 @@ Diff_edit() {
     done
     return 0
 }
+
+# Checks if current script is run from command line.
+# http://stackoverflow.com/a/4262107
+Check_if_run_fg_cmdline() {
+    local test1=$(ps -o stat= -p $PPID)
+    local test2=$(ps -o stat= -p $$)
+    [[ ${test1} == "Ss" && ${test2} == "S+" ]] && return 0
+    return 1
+}
