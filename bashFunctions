@@ -380,6 +380,22 @@ Append_array() {
     eval "${array_name}[\${#${array_name}[@]}]=\"${value_to_be_appended}\""
 }
 
+# $1: element as value
+# $2: array name
+In_array() {
+    local element="${1}"; shift
+    local array_name="${2}"; shift
+
+    local i  # We use "i" varible and want to keep it changes only locally!
+    local variables_i="${array_name}[\${i}]"
+    eval 'local -a keys=(${!'${array_name}'[@]})' # XXX: How to do this without eval
+
+    for i in "${keys[@]}"; do
+        [[ ${!variables_i} == ${element} ]] && return 0 # element found in the given array
+    done
+    return 1
+}
+
 # Selects elements from given array and stores them to target array.
 # $1: Source array name
 # $2: Target array name
