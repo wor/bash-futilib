@@ -384,7 +384,7 @@ Append_array() {
 # $2: array name
 In_array() {
     local element="${1}"; shift
-    local array_name="${2}"; shift
+    local array_name="${1}"; shift
 
     local i  # We use "i" varible and want to keep it changes only locally!
     local variables_i="${array_name}[\${i}]"
