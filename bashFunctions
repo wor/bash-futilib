@@ -551,6 +551,45 @@ Petc() {
     read
 }
 
+# $1: Question to be asked as prompt for yes/no answer
+# $2: Default answer "y|n", if not given then no default answer is accepted.
+Pyn() {
+    local __BF__question="${1}"
+    local __BF__default="${2}"
+    local __BF__answer
+    local __BF__question_postfix
+    local __BF__yes_postfix="[Y/n]: "
+    local __BF__no_postfix="[y/N]: "
+    local __BF__postfix="[y/n]: "
+
+    if [[ "${__BF__default}" =~ ^(y|Y|0) ]]; then
+        __BF__question_postfix="${__BF__yes_postfix}"
+    elif ! [[ "${__BF__default}" ]]; then
+        __BF__question_postfix="${__BF__postfix}"
+    else
+        __BF__question_postfix="${__BF__no_postfix}"
+    fi
+
+    echo -n "${__BF__question} ${__BF__question_postfix}"
+    read __BF__answer
+
+    if [[ "${__BF__answer}" =~ ^( )*$ && "${__BF__question_postfix}" != "${__BF__postfix}" ]]; then
+        [[ "${__BF__question_postfix}" == "${__BF__yes_postfix}" ]] && return 0
+        return 1
+    elif [[ "${__BF__answer}" =~ ^(y|Y)((e|E)(s|S))?$ ]]; then
+        return 0
+    elif [[ "${__BF__answer}" =~ ^(n|N)(o|O)?$ ]]; then
+        return 1
+    else
+        Eecho "Please answer [Y]es or [N]o.."
+        Pyn "${1}" "${2}"
+        return
+    fi
+
+    return 1
+}
+
+
 
 # Prompt yes/no question. Returns 0 if "yes" is answered or defaulted and 1 if "no" is answered or defaulted.
 # $1: Prompt text
