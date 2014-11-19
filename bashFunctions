@@ -65,6 +65,12 @@ addToPathEnd() {
 }
 alias addToPath='addToPathEnd'
 
+# adds the $1 param to the beginning of PATH variable if it is a existing dir
+# $1: Existing directory path
+# $2: Alternative PATH like variable to work on, default is the "PATH"
+AddToPathBegIfExists() {
+    [[ -d "${1}" ]] && addToPathBeg "${1}" "${2}"
+}
 
 #http://tldp.org/LDP/Bash-Beginners-Guide/html/sect_11_02.html
 # adds to path front or after to PATH, maybe better check how differs
@@ -269,30 +275,46 @@ Get_script_path() {
     eval "${2}"="\${script_path}"
 }
 
-# Find files matching given regex (egrep style) from the given dir.
-#
-# Stores results to an array varible which name is given as a parameter.
-# If given array name is "-" print found files to stdout.
-#
-# Options:
-#   $1: -mp: match whole path not only basename
-#   $1: -maxd: max search depth (default 1)
-#   $1: -mind: min search depth (default 0)
-#
-# Positional:
-#   $1: search dir
-#   $2: regex
-#   $3: array name where find archive file names are to be stored
 Find_files() {
+    local help_string="
+Find files matching given regex (egrep style) from the given dir.
+
+Stores results to an array varible which name is given as a parameter.
+If given array name is '-' print found files to stdout.
+
+Options:
+  \$1: -mp: match whole path not only basename
+  \$1: -maxd: max search depth (default 1)
+  \$1: -mind: min search depth (default 0)
+
+Positional:
+  \$1: search dir
+  \$2: regex
+  \$3: array name where find archive file names are to be stored
+
+Example of usage:
+  $ declare -a files
+  $ Find_files -maxd 2 . '.*\.txt' -     # print found files to stdout
+  $ Find_files -maxd 2 . '.*\.txt' files # store to the array 'files'
+"
+    local print_help="false"
     local match_path="false"
     local max_depth=1
     local min_depth=0
+
     # Reading opts
-    while [[ ${1} =~ ^-m(axd|ind|p) && ${1} != "--" ]]; do
+    while [[ ${1} =~ ^-(h|m(axd|ind|p)) && ${1} != "--" ]]; do
+        [[ ${1} == "-h" ]] && { print_help="true"; shift; }
         [[ ${1} == "-maxd" ]] && { max_depth="${2}"; shift 2; }
         [[ ${1} == "-mind" ]] && { min_depth="${2}"; shift 2; }
         [[ ${1} == "-mp" ]] && { match_path="true"; shift; }
     done
+
+    # Print help and exit
+    if [[ ${print_help} == "true" ]]; then
+        printf "%s" "${help_string}"
+        return
+    fi
 
     [[ "${1}" ]] || { Eecho "Find_archives(): Error: Search dir must be given."; return 1; }
     [[ "${2}" ]] || { Eecho "Find_archives(): Error: Regex must be given."; return 1; }
@@ -323,9 +345,9 @@ Find_files() {
     fi
 }
 
-# $1: file name to be sourced if it exists
+# $1: file name to be sourced if it exists and has size greater than 0
 Source_if_exists() {
-    [[ -e ${1} ]] && source "${1}"
+    [[ -s ${1} ]] && source "${1}"
 }
 
 # $1: array variable name
@@ -346,6 +368,7 @@ Print_array() {
 }
 
 # $1: array variable name
+# $2: sort parameters
 Sort_array() {
     local -a temp_array
     local temp="${1}[@]"
@@ -354,7 +377,7 @@ Sort_array() {
         <(
             for v in "${temp_array[@]}"; do
                 echo "${v}"
-            done | sort
+            done | sort ${2}
         )
 }
 
@@ -440,6 +463,17 @@ Filter_array() {
             done
         )
 }
+
+# XXX: Alternative filtering with unset and support for associative arrays
+#Filter_array() {
+#    local i_array_name="${1}"
+#    local i
+#    eval 'local -a keys=(${!'${i_array_name}'[@]})' # XXX: How to do this without eval
+#
+#    for i in "${keys[@]}"; do
+#        unset -v "${i_array_name}[${i}]"
+#    done
+#}
 
 # Splits given array to two arrays according to given regex.
 # $1: extended-regex
